@@ -12,9 +12,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.iid.FirebaseInstanceId
-import com.google.firebase.messaging.FirebaseMessaging
-import com.google.firebase.messaging.RemoteMessage
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.gson.JsonObject
@@ -41,8 +38,8 @@ class ChatListRepository {
         }
     }
 
-    fun oldMessages(otherUserNum: String): MutableLiveData<List<ChatModel>> {
-
+    fun oldMessages(otherUserNum: String, refresh: Boolean): MutableLiveData<List<ChatModel>> {
+        var arrayListSize: Int
         userNumber = mAuth!!.currentUser!!.phoneNumber.toString()
         val docRef = db.collection("users").document(mAuth!!.currentUser!!.phoneNumber.toString())
             .collection("chat").document(otherUserNum)
@@ -50,19 +47,39 @@ class ChatListRepository {
             .addOnSuccessListener { document ->
                 if (document.data != null) {
                     val arrayList = document.data!!["chat"] as java.util.ArrayList<*>?
-                    if (arrayList!!.size != 0) {
+                    if (arrayList!!.size != 0 && !refresh) {
+                        arrayListSize = arrayList.size
                         if (arrayList.size < 11) {
                             chatList = setDataInList(
                                 0,
                                 arrayList.size - 1,
                                 arrayList,
-                                true
+                                false
                             )
                             mutableLiveDataList.value = chatList
                         } else if (arrayList.size >= 11) {
                             chatList = setDataInList(
                                 arrayList.size - 11,
                                 arrayList.size - 1,
+                                arrayList,
+                                false
+                            )
+                            mutableLiveDataList.value = chatList
+                        }
+                    } else if (arrayList.size != 0 && refresh) {
+                        arrayListSize = arrayList.size - 11
+                        if (arrayListSize < 11) {
+                            chatList = setDataInList(
+                                0,
+                                arrayListSize - 1,
+                                arrayList,
+                                true
+                            )
+                            mutableLiveDataList.postValue(chatList)
+                        } else if (arrayList.size >= 11) {
+                            chatList = setDataInList(
+                                arrayListSize - 11,
+                                arrayListSize - 1,
                                 arrayList,
                                 true
                             )
@@ -177,26 +194,26 @@ class ChatListRepository {
                 "two"
             }
             when {
-                userMsg != "" -> {
-                    chatList.add(ChatModel(userMsg, "", "", "", "", time, user))
-//                    sendNotification(otherUserNum,otherUserName,userMsg)
-//                    if(!oldMsg){
-                    val SENDER_ID = FirebaseInstanceId.getInstance().id
-                    val messageId = 0 // Increment for each
-                    val fm = FirebaseMessaging.getInstance()
-                    fm.send(
-                        RemoteMessage.Builder("$SENDER_ID@fcm.googleapis.com")
-                            .setMessageId(messageId.toString())
-                            .addData("my_message", "Hello World")
-                            .addData("my_action", "SAY_HELLO")
-                            .build()
-                    )
+                userMsg.isNotEmpty() -> {
+                    if (oldMsg) {
+                        chatList.add(0, ChatModel(userMsg, "", "", "", "", time, user))
+                    } else {
+                        chatList.add(ChatModel(userMsg, "", "", "", "", time, user))
+                    }
                 }
                 userImg.isNotEmpty() -> {
-                    chatList.add(ChatModel("", userImg, "", "", "", time, user))
+                    if (oldMsg) {
+                        chatList.add(0, ChatModel("", userImg, "", "", "", time, user))
+                    } else {
+                        chatList.add(ChatModel("", userImg, "", "", "", time, user))
+                    }
                 }
                 userVideo.isNotEmpty() -> {
-                    chatList.add(ChatModel("", "", "", "", userVideo, time, user))
+                    if (oldMsg) {
+                        chatList.add(0, ChatModel("", "", "", "", userVideo, time, user))
+                    } else {
+                        chatList.add(ChatModel("", "", "", "", userVideo, time, user))
+                    }
                 }
             }
             Log.e(TAG, chatList.size.toString())

@@ -15,6 +15,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.bumptech.glide.Glide
 import com.example.chatapp.R
 import com.example.chatapp.service.model.ChatModel
@@ -26,6 +27,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.iid.FirebaseInstanceId
 import java.util.*
+import kotlin.collections.ArrayList
 
 @Suppress("UNREACHABLE_CODE", "NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS", "DEPRECATION")
 class ChatsFragment : Fragment() {
@@ -54,7 +56,8 @@ class ChatsFragment : Fragment() {
             activity!!.intent.getStringExtra(getString(R.string.intentChatOtherUserName))
         chatFragmentViewModel = ChatFragmentViewModel()
         chatFragmentViewModel.init()
-
+        val swipeContainer = view.findViewById<SwipeRefreshLayout>(R.id.swipeContainer)
+        var refresh = false
         val hour = Calendar.getInstance()[Calendar.HOUR]
         val min = Calendar.getInstance()[Calendar.MINUTE]
         val pm = Calendar.getInstance()[Calendar.HOUR_OF_DAY]
@@ -76,11 +79,19 @@ class ChatsFragment : Fragment() {
         val chatBox = view.findViewById<EditText>(R.id.edtChatBox)
 
         setChatUsrImageDetails(imgChat, tvName, tvLastSeen)
-        chatFragmentViewModel.getOldChat(otherUserNum).observe(activity!!,
-            Observer { chatListLive -> onLoadViewData(chatListLive) })
+        chatFragmentViewModel.getOldChat(otherUserNum, false).observe(activity!!,
+            Observer { chatListLive -> onLoadViewData(chatListLive, false) })
         chatFragmentViewModel.getMessageReceived(otherUserNum)
             .observe(activity!!,
-                Observer { chatListLive -> onLoadViewData(chatListLive) })
+                Observer { chatListLive -> onLoadViewData(chatListLive, false) })
+        swipeContainer.setOnRefreshListener {
+            chatFragmentViewModel.getOldChat(otherUserNum, true).observe(activity!!,
+                Observer { chatListLive ->
+                    refresh = true
+                    onLoadViewData(chatListLive, refresh)
+                    swipeContainer.isRefreshing = false
+                })
+        }
         chatBox.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {
                 if (chatBox.text.toString() == "") {
@@ -127,21 +138,11 @@ class ChatsFragment : Fragment() {
                     otherUserName,
                     ChatModel(chatBox.text.toString(), "", "", "", "", date, "one")
                 ).observe(activity!!,
-                    Observer { chatListLive -> onLoadViewData(chatListLive) })
+                    Observer { chatListLive -> onLoadViewData(chatListLive, refresh) })
                 chatBox.setText("")
             }
         }
-        imgChat.setOnClickListener {
-            val bundle = Bundle()
-            if (profileUrl.isNotEmpty()) {
-                bundle.putString("profile_img", profileUrl)
-                bundle.putString("profile_name", profileName)
-                val fragment = ChatDetailFragment()
-                fragment.arguments = bundle
-                activity!!.supportFragmentManager.beginTransaction()
-                    .replace(R.id.chat_container, fragment).commit()
-            }
-        }
+
         return view
     }
 
@@ -165,7 +166,17 @@ class ChatsFragment : Fragment() {
                 Log.d(TAG, "Current data: null")
             }
         }
-
+        imgChat.setOnClickListener {
+            val bundle = Bundle()
+            if (profileUrl.isNotEmpty()) {
+                bundle.putString("profile_img", profileUrl)
+                bundle.putString("profile_name", profileName)
+                val fragment = ChatDetailFragment()
+                fragment.arguments = bundle
+                activity!!.supportFragmentManager.beginTransaction()
+                    .replace(R.id.chat_container, fragment).commit()
+            }
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -227,12 +238,23 @@ class ChatsFragment : Fragment() {
         ref.set(notification)
     }
 
-    private fun onLoadViewData(chatListLive: List<ChatModel>?) {
+    private fun onLoadViewData(chatListLive: List<ChatModel>?, refresh: Boolean) {
+        var newList: MutableList<ChatModel> = ArrayList()
+//            newList.addAll(0, chatListLive!!)
         mAdapter = ChatRecyclerViewAdapter(
             chatListLive, activity!!.getString(R.string.flagChatReceived),
             activity!!
         )
+        Log.e("sdjhgcbjdsbcksdbcksjdc", chatListLive.toString())
         recyclerView.adapter = mAdapter
-        recyclerView.smoothScrollToPosition(mAdapter.itemCount - 1)
+//            mAdapter.notifyItemInserted(0)
+//            recyclerView.smoothScrollToPosition(mAdapter.itemCount - 1)
+        mAdapter.notifyDataSetChanged()
+        if (refresh) {
+
+            recyclerView.smoothScrollToPosition(0)
+        } else if (!refresh) {
+            recyclerView.smoothScrollToPosition(mAdapter.itemCount - 1)
+        }
     }
 }

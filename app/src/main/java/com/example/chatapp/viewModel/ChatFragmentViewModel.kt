@@ -15,8 +15,8 @@ class ChatFragmentViewModel : ViewModel() {
         chatListRepository = ChatListRepository.getInstance()
     }
 
-    fun getOldChat(otherUserNum: String): LiveData<List<ChatModel>> {
-        chatList = chatListRepository.oldMessages(otherUserNum)
+    fun getOldChat(otherUserNum: String, refresh: Boolean): LiveData<List<ChatModel>> {
+        chatList = chatListRepository.oldMessages(otherUserNum, refresh)
         return chatList
     }
 

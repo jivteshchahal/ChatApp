@@ -1,55 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/swipeContainer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/chat_image"
-    android:orientation="vertical"
-
-    android:weightSum="1"
     tools:context=".view.ui.fragments.ChatsFragment">
-
-    <include layout="@layout/chat_bar" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rcViewChats"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-
-        android:layout_weight="1" />
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/cardview_dark_background"
-        android:orientation="horizontal"
+        android:layout_height="match_parent"
+        android:background="@drawable/chat_image"
+        android:orientation="vertical"
         android:weightSum="1">
 
-        <EditText
-            android:id="@+id/edtChatBox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight=".25"
-            android:hint="Send Message"
-            android:importantForAutofill="no"
-            android:textColor="@color/cardview_light_background"
-            android:inputType="text"
-            tools:ignore="LabelFor" />
+        <include layout="@layout/chat_bar" />
 
-        <ImageButton
-            android:id="@+id/btnImageSend"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rcViewChats"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.75"
-            android:background="@drawable/shape_con"
-            android:src="@android:drawable/ic_menu_camera" />
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
 
-        <Button
-            android:id="@+id/btnSend"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="0.75"
-            android:text="@string/btnChatSend"
-            android:visibility="gone" />
-    </LinearLayout>
+            android:background="@color/cardview_dark_background"
+            android:orientation="horizontal"
+            android:weightSum="1">
+
+            <EditText
+                android:id="@+id/edtChatBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight=".25"
+                android:hint="Send Message"
+                android:importantForAutofill="no"
+                android:inputType="text"
+                android:textColor="@color/cardview_light_background"
+                tools:ignore="LabelFor" />
+
+            <ImageButton
+                android:id="@+id/btnImageSend"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.75"
+                android:background="@drawable/shape_con"
+                android:src="@android:drawable/ic_menu_camera" />
+
+            <Button
+                android:id="@+id/btnSend"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.75"
+                android:text="@string/btnChatSend"
+                android:visibility="gone" />
+        </LinearLayout>
 </LinearLayout>
+
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
