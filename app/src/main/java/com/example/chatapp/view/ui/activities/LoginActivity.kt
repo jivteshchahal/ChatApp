@@ -12,15 +12,15 @@ import com.google.firebase.auth.FirebaseAuth
 class LoginActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
-        val userPhone = findViewById<EditText>(R.id.edtUserPhNumber)
-        val buttonOTP = findViewById<Button>(R.id.btnOTP)
-        val countryCodeSpinner = findViewById<Spinner>(R.id.countryCode)
         if (FirebaseAuth.getInstance().currentUser != null) {
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
             finish()
         }
+        setContentView(R.layout.activity_login)
+        val userPhone = findViewById<EditText>(R.id.edtUserPhNumber)
+        val buttonOTP = findViewById<Button>(R.id.btnOTP)
+        val countryCodeSpinner = findViewById<Spinner>(R.id.countryCode)
         var countryCode = ""
 //        val countryNames = arrayOf(
 //            "Afghanistan","+Albania",

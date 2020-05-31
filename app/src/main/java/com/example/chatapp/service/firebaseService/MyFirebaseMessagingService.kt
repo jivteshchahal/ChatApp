@@ -17,6 +17,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import org.json.JSONObject
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 
@@ -117,7 +118,30 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
      * @param messageBody FCM message body received.
      */
     private fun sendNotification(messageBody: String) {
+        var message = ""
+        val json1 = JSONObject(messageBody)
+        val chat = json1.get("chat").toString()
+        val json = JSONObject(chat)
+        val userMsg = json.get("chat_message").toString()
+        val sender = json.get("sender").toString()
+        val time = json.get("timestamp").toString()
+        val userImg = json.get("chat_image").toString().replace("\\", "")
+        val userVideo = json.get("chat_video").toString()
+        if (userMsg.isNotEmpty()) {
+            message = userMsg
+        } else if (userImg.isNotEmpty()) {
+            message = "image"
+        }
         val intent = Intent(this, ChatActivity::class.java)
+        intent.putExtra(
+            getString(R.string.intentChatOtherUserNum),
+            sender
+        )
+        intent.putExtra(
+            getString(R.string.intentChatOtherUserName),
+            sender
+            //TODO change needed
+        )
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
         val pendingIntent = PendingIntent.getActivity(
             this, 0 /* Request code */, intent,
@@ -127,9 +151,9 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         val channelId = "fcm_default_channel"
         val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
         val notificationBuilder = NotificationCompat.Builder(this, channelId)
-            .setSmallIcon(R.drawable.ic_launcher_background)
-            .setContentTitle(getString(R.string.app_name))
-            .setContentText(messageBody)
+            .setSmallIcon(R.drawable.back)
+            .setContentTitle(sender)
+            .setContentText(message)
             .setAutoCancel(true)
             .setSound(defaultSoundUri)
             .setContentIntent(pendingIntent)
@@ -162,7 +186,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     }
 
     companion object {
-
         private const val TAG = "MyFirebaseMsgService"
     }
 }

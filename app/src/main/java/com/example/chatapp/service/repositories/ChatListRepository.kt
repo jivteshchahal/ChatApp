@@ -49,7 +49,7 @@ class ChatListRepository {
                     val arrayList = document.data!!["chat"] as java.util.ArrayList<*>?
                     if (arrayList!!.size != 0 && !refresh) {
                         arrayListSize = arrayList.size
-                        if (arrayList.size < 11) {
+                        if (arrayList.size < 21) {
                             chatList = setDataInList(
                                 0,
                                 arrayList.size - 1,
@@ -57,9 +57,9 @@ class ChatListRepository {
                                 false
                             )
                             mutableLiveDataList.value = chatList
-                        } else if (arrayList.size >= 11) {
+                        } else if (arrayList.size >= 21) {
                             chatList = setDataInList(
-                                arrayList.size - 11,
+                                arrayList.size - 21,
                                 arrayList.size - 1,
                                 arrayList,
                                 false
@@ -67,8 +67,8 @@ class ChatListRepository {
                             mutableLiveDataList.value = chatList
                         }
                     } else if (arrayList.size != 0 && refresh) {
-                        arrayListSize = arrayList.size - 11
-                        if (arrayListSize < 11) {
+                        arrayListSize = arrayList.size - 21
+                        if (arrayListSize < 21) {
                             chatList = setDataInList(
                                 0,
                                 arrayListSize - 1,
@@ -76,9 +76,9 @@ class ChatListRepository {
                                 true
                             )
                             mutableLiveDataList.postValue(chatList)
-                        } else if (arrayList.size >= 11) {
+                        } else if (arrayList.size >= 21) {
                             chatList = setDataInList(
-                                arrayListSize - 11,
+                                arrayListSize - 21,
                                 arrayListSize - 1,
                                 arrayList,
                                 true
@@ -187,8 +187,8 @@ class ChatListRepository {
             val time = json.get("timestamp").toString()
             val userImg = json.get("chat_image").toString().replace("\\", "")
             val userVideo = json.get("chat_video").toString()
-            var user = ""
-            user = if (sender == userNumber) {
+
+            val user = if (sender == userNumber) {
                 "one"
             } else {
                 "two"

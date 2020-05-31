@@ -15,7 +15,6 @@ import com.example.chatapp.viewModel.ConversationFragViewModel
 @Suppress("IMPLICIT_CAST_TO_ANY")
 class ConversationFragment : Fragment() {
     private lateinit var recyclerView: RecyclerView
-    private lateinit var mAdapter: ConversationRVAdapter
     private lateinit var conversationFragViewModel: ConversationFragViewModel
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -28,11 +27,13 @@ class ConversationFragment : Fragment() {
         recyclerView.layoutManager = layoutManager
         conversationFragViewModel = ConversationFragViewModel()
         conversationFragViewModel.init(activity!!.applicationContext)
+
         conversationFragViewModel.getConversation().observe(activity!!, Observer {
-            if(it.isNotEmpty() && activity!= null)
-            mAdapter = ConversationRVAdapter(it, activity)
-            recyclerView.adapter = mAdapter
-            recyclerView.smoothScrollToPosition(mAdapter.itemCount - 1)
+            if (it.isNotEmpty() && activity != null) {
+                val mAdapter: ConversationRVAdapter = ConversationRVAdapter(it, activity)
+                recyclerView.adapter = mAdapter
+                recyclerView.smoothScrollToPosition(mAdapter.itemCount - 1)
+            }
         })
         return view
     }

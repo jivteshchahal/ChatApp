@@ -1,5 +1,6 @@
 package com.example.chatapp.view.ui.fragments
 
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
 import android.net.Uri
@@ -21,13 +22,12 @@ import com.example.chatapp.R
 import com.example.chatapp.service.model.ChatModel
 import com.example.chatapp.view.adapters.ChatRecyclerViewAdapter
 import com.example.chatapp.viewModel.ChatFragmentViewModel
-import com.google.android.gms.tasks.OnCompleteListener
+import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
-import com.google.firebase.iid.FirebaseInstanceId
+import com.google.firebase.functions.FirebaseFunctions
 import java.util.*
-import kotlin.collections.ArrayList
 
 @Suppress("UNREACHABLE_CODE", "NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS", "DEPRECATION")
 class ChatsFragment : Fragment() {
@@ -44,6 +44,8 @@ class ChatsFragment : Fragment() {
     private lateinit var profileName: String
     private lateinit var imageUri: Uri
     private lateinit var chatFragmentViewModel: ChatFragmentViewModel
+    private var functions: FirebaseFunctions = FirebaseFunctions.getInstance()
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -67,7 +69,6 @@ class ChatsFragment : Fragment() {
         } else {
             " am"
         }
-//        checkNewMSG()
         date = "$hour:$min$noon"
         recyclerView = view.findViewById(R.id.rcViewChats)
         recyclerView.layoutManager = layoutManager
@@ -133,6 +134,11 @@ class ChatsFragment : Fragment() {
 //                recyclerView.adapter = mAdapter
 //                recyclerView.smoothScrollToPosition(mAdapter.itemCount - 1)
 //                messageSent(ChatModel(chatBox.text.toString(), "", "", date, "one"))
+                sendNotification(
+                    FirebaseAuth.getInstance().currentUser!!.displayName!!,
+                    FirebaseAuth.getInstance().currentUser!!.phoneNumber!!
+                    , otherUserNum
+                )
                 chatFragmentViewModel.getMessageSend(
                     otherUserNum,
                     otherUserName,
@@ -146,6 +152,7 @@ class ChatsFragment : Fragment() {
         return view
     }
 
+    @SuppressLint("SetTextI18n")
     private fun setChatUsrImageDetails(imgChat: ImageView, tvName: TextView, tvLastSeen: TextView) {
 
         val docRef = db.collection("users").document(otherUserNum)
@@ -155,13 +162,15 @@ class ChatsFragment : Fragment() {
                 Log.w(TAG, "Listen failed.", e)
                 return@addSnapshotListener
             }
-            if (snapshot != null && snapshot.exists()) {
+            if (snapshot != null && snapshot.exists() && activity != null) {
                 profileUrl = snapshot.data!!["image_url"].toString()
                 profileName =
                     activity!!.intent.getStringExtra(getString(R.string.intentChatOtherUserName))
                 tvName.text = profileName
-                tvLastSeen.text = "Last Online: " + snapshot.data!!["lastSeen"].toString()
-                Glide.with(activity!!).load(snapshot.data!!["image_url"]?.toString()).into(imgChat)
+                tvLastSeen.text = snapshot.data!!["lastSeen"].toString()
+                Glide.with(activity!!).load(snapshot.data!!["image_url"]?.toString())
+                    .into(imgChat)
+
             } else {
                 Log.d(TAG, "Current data: null")
             }
@@ -199,62 +208,44 @@ class ChatsFragment : Fragment() {
 //            Observer { chatListLive -> onLoadViewData(chatListLive) })
     }
 
-    private fun updateToken(refreshToken: String?) {
-        val docRef = FirebaseFirestore.getInstance().collection("users")
-            .document(FirebaseAuth.getInstance().currentUser!!.phoneNumber!!)
-            .collection("token").document(FirebaseAuth.getInstance().currentUser!!.phoneNumber!!)
-//        val token = Token(refreshToken!!)
-        val map = hashMapOf(
-            "token" to refreshToken
-        )
-        docRef.set(map)
-    }
-
-    private fun checkNewMSG() {
-        FirebaseInstanceId.getInstance().instanceId
-            .addOnCompleteListener(OnCompleteListener { task ->
-                if (!task.isSuccessful) {
-                    Log.w(TAG, "getInstanceId failed", task.exception)
-                    return@OnCompleteListener
-                }
-                // Get new Instance ID token
-                val token = task.result?.token
-                // Log and toast
-                val msg = getString(R.string.msg_token_fmt, token)
-                Log.d(TAG, msg)
-                Toast.makeText(activity, msg, Toast.LENGTH_SHORT).show()
-            })
-    }
-
-    fun sendNotificationToUser(user: String?, message: String?) {
-        val ref = FirebaseFirestore.getInstance().collection("users")
-            .document(FirebaseAuth.getInstance().currentUser!!.phoneNumber!!)
-            .collection("notification")
-            .document(FirebaseAuth.getInstance().currentUser!!.phoneNumber!!)
-
-        val notification = hashMapOf<String, String>()
-        notification["title"] = user!!
-        notification["message"] = message!!
-        ref.set(notification)
-    }
 
     private fun onLoadViewData(chatListLive: List<ChatModel>?, refresh: Boolean) {
-        var newList: MutableList<ChatModel> = ArrayList()
-//            newList.addAll(0, chatListLive!!)
-        mAdapter = ChatRecyclerViewAdapter(
-            chatListLive, activity!!.getString(R.string.flagChatReceived),
-            activity!!
-        )
-        Log.e("sdjhgcbjdsbcksdbcksjdc", chatListLive.toString())
-        recyclerView.adapter = mAdapter
-//            mAdapter.notifyItemInserted(0)
-//            recyclerView.smoothScrollToPosition(mAdapter.itemCount - 1)
-        mAdapter.notifyDataSetChanged()
-        if (refresh) {
-
-            recyclerView.smoothScrollToPosition(0)
-        } else if (!refresh) {
+        if (activity != null) {
+            mAdapter = ChatRecyclerViewAdapter(
+                chatListLive, activity!!.getString(R.string.flagChatReceived),
+                activity!!
+            )
+            recyclerView.adapter = mAdapter
+//        if (refresh) {
             recyclerView.smoothScrollToPosition(mAdapter.itemCount - 1)
+
+//        } else if (!refresh) {
+//            recyclerView.smoothScrollToPosition(0)
+//
+//        }
         }
+    }
+
+    private fun sendNotification(
+        name: String,
+        currentUser: String,
+        otherUser: String
+    ): Task<String> {
+        // Create the arguments to the callable function.
+        val data = hashMapOf(
+            "userName" to name,
+            "currentUser" to currentUser,
+            "otherUser" to otherUser
+        )
+        return functions
+            .getHttpsCallable("fcm")
+            .call(data)
+            .continueWith { task ->
+                // This continuation runs on either success or failure, but if the task
+                // has failed then result will throw an Exception which will be
+                // propagated down.
+                val result = task.result?.data as String
+                result
+            }
     }
 }

@@ -5,8 +5,10 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.CountDownTimer
 import android.util.Log
+import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.chatapp.R
@@ -126,7 +128,7 @@ class OTPActivity : AppCompatActivity() {
 
                 // Show a message and update the UI
                 // [START_EXCLUDE]
-//                    updateUI(STATE_VERIFY_FAILED)
+                updateUI(STATE_VERIFY_FAILED)
                 // [END_EXCLUDE]
             }
 
@@ -145,12 +147,17 @@ class OTPActivity : AppCompatActivity() {
 
                 // [START_EXCLUDE]
                 // Update UI
-//                    updateUI(STATE_CODE_SENT)
+                updateUI(STATE_CODE_SENT)
                 // [END_EXCLUDE]
             }
         }
         // [END phone_auth_callbacks]
 
+    }
+
+    private fun updateUI(state: Int) {
+        val progressBar = ProgressBar(this, null, android.R.attr.progressBarStyleSmall)
+        progressBar.visibility = View.VISIBLE
     }
 
     private fun startCountdown() {
@@ -230,9 +237,11 @@ class OTPActivity : AppCompatActivity() {
     // [END resend_verification]
     private fun verifyPhoneNumberWithCode(verificationId: String?, code: String) {
         // [START verify_with_code]
-        val credential = PhoneAuthProvider.getCredential(verificationId!!, code)
+        if (verificationId != null) {
+            val credential = PhoneAuthProvider.getCredential(verificationId, code)
         // [END verify_with_code]
-        signInWithPhoneAuthCredential(credential)
+            signInWithPhoneAuthCredential(credential)
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

@@ -2,12 +2,14 @@
 <androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
+    android:layout_margin="5dp"
+    android:background="@drawable/chat_bar_shape"
+    android:elevation="3dp"
     android:orientation="vertical">
 
     <androidx.appcompat.widget.LinearLayoutCompat
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/design_default_color_primary"
         android:orientation="horizontal">
 
 
@@ -16,6 +18,7 @@
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_margin="5dp"
+            android:elevation="10dp"
             android:src="@color/colorPrimaryDark" />
 
         <androidx.appcompat.widget.LinearLayoutCompat
@@ -26,32 +29,55 @@
             <androidx.appcompat.widget.LinearLayoutCompat
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-
                 android:orientation="vertical">
 
                 <TextView
                     android:id="@+id/tvChatName"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="10dp"
-                    android:text="Name"
+                    android:layout_marginStart="10dp"
+                    android:textColor="@color/design_default_color_surface"
                     android:textSize="25sp" />
 
                 <TextView
                     android:id="@+id/tvLastSeen"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="10sp" />
+                    android:layout_marginStart="10sp"
+                    android:textColor="@color/design_default_color_surface" />
 
             </androidx.appcompat.widget.LinearLayoutCompat>
 
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="end|center"
+                android:orientation="horizontal">
+
+                <androidx.appcompat.widget.LinearLayoutCompat
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="@dimen/text_margin"
+                    android:orientation="horizontal">
+
+                    <de.hdodenhof.circleimageview.CircleImageView
+                        android:id="@+id/imgUserCall"
+                        android:layout_width="30dp"
+                        android:layout_height="30dp"
+                        android:layout_margin="5dp"
+                        android:elevation="10dp"
+                        android:src="@android:drawable/ic_menu_call" />
+
+                    <de.hdodenhof.circleimageview.CircleImageView
+                        android:id="@+id/imgUserVideo"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_margin="5dp"
+                        android:elevation="10dp"
+                        android:src="@android:drawable/ic_menu_camera" />
+
+                </androidx.appcompat.widget.LinearLayoutCompat>
+            </androidx.appcompat.widget.LinearLayoutCompat>
         </androidx.appcompat.widget.LinearLayoutCompat>
-
     </androidx.appcompat.widget.LinearLayoutCompat>
-
-    <View
-        android:id="@+id/divider"
-        android:layout_width="match_parent"
-        android:layout_height="2dp"
-        android:background="?android:attr/listDivider" />
 </androidx.appcompat.widget.LinearLayoutCompat>

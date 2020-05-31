@@ -34,8 +34,8 @@ class ConversationRVAdapter(
     @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val conversationModel = mValues[position]
-
         holder.tvName.text = conversationModel.name
+        holder.tvLastMsgTime.visibility = View.VISIBLE
         holder.lastChat.visibility = View.VISIBLE
         chatFragmentViewModel.getMessageReceived(conversationModel.phoneNumber).observe(activity!!,
             Observer {
@@ -57,6 +57,7 @@ class ConversationRVAdapter(
                         holder.lastChat.text = "location"
                     }
                 }
+                holder.tvLastMsgTime.text = it[it.size - 1].timestamp
                 if (unSeenCount != 0) {
                     holder.tvUnSeenCount.visibility = View.VISIBLE
                     holder.tvUnSeenCount.text = unSeenCount.toString()
@@ -95,6 +96,7 @@ class ConversationRVAdapter(
         val contactLayout: LinearLayoutCompat = mView.contactLayoutItem
         val lastChat: TextView = mView.tvChatCon
         val tvUnSeenCount: TextView = mView.tvChatConCount
+        val tvLastMsgTime: TextView = mView.tvChatConTime
         override fun toString(): String {
             return super.toString() + " '" + tvName.text + "'"
         }

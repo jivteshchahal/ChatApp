@@ -5,10 +5,12 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.example.chatapp.R
 import com.example.chatapp.view.adapters.ContactsViewAdapter
 import com.example.chatapp.viewModel.ContactsFragViewModel
@@ -42,6 +44,12 @@ class ContactsFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_contacts, container, false)
         mAuth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
+        val searchBar = view.findViewById<SearchView>(R.id.svContacts)
+        val swipeContainer = view.findViewById<SwipeRefreshLayout>(R.id.sflContacts)
+        swipeContainer.setOnRefreshListener {
+            swipeContainer.isRefreshing = false
+            searchBar.visibility = View.VISIBLE
+        }
         firebaseUser = mAuth?.currentUser
         recyclerView = view.findViewById(R.id.rcViewContacts)
         val layoutManager: RecyclerView.LayoutManager = LinearLayoutManager(activity)
