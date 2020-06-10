@@ -7,11 +7,8 @@ import android.provider.MediaStore
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.example.chatapp.service.model.ChatModel
-import com.example.chatapp.view.adapters.ChatRecyclerViewAdapter
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FieldValue
-import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.*
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.google.gson.JsonObject
@@ -19,14 +16,14 @@ import org.json.JSONObject
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 
+@Suppress("DEPRECATION")
 class ChatListRepository {
     private var mAuth: FirebaseAuth? = FirebaseAuth.getInstance()
     private var db: FirebaseFirestore = FirebaseFirestore.getInstance()
     private var TAG = "Chat Fragment"
     private var chatList: MutableList<ChatModel> = ArrayList()
     private lateinit var registration: ListenerRegistration
-    private lateinit var mAdapter: ChatRecyclerViewAdapter
-    private lateinit var userNumber: String
+    private val userNumber = mAuth!!.currentUser!!.phoneNumber.toString()
     private var mutableLiveDataList: MutableLiveData<List<ChatModel>> =
         MutableLiveData<List<ChatModel>>()
 
@@ -40,7 +37,6 @@ class ChatListRepository {
 
     fun oldMessages(otherUserNum: String, refresh: Boolean): MutableLiveData<List<ChatModel>> {
         var arrayListSize: Int
-        userNumber = mAuth!!.currentUser!!.phoneNumber.toString()
         val docRef = db.collection("users").document(mAuth!!.currentUser!!.phoneNumber.toString())
             .collection("chat").document(otherUserNum)
         docRef.get()
@@ -94,11 +90,29 @@ class ChatListRepository {
             }.addOnFailureListener { exception ->
                 Log.d(TAG, "get failed with ", exception)
             }
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        /////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        return mutableLiveDataList
+    }
+
+    fun oldMessagesNew(otherUserNum: String, refresh: Boolean): MutableLiveData<List<ChatModel>> {
+        db.collection("users").document(userNumber)
+            .collection("conversations").document(otherUserNum).collection("chat")
+            .orderBy("timeStamp", Query.Direction.ASCENDING).limit(20)
+            .whereLessThan("timeStamp", "").get().addOnSuccessListener {
+//                for (document in it.documents) {
+//                    Log.e("zmmmmssssascsadss", document.data!!["chat"].toString())
+                setDataInListNew(
+                    it.documents,
+                    false
+                )
+//                }
+            }
         return mutableLiveDataList
     }
 
     fun messageReceived(otherUserNum: String): MutableLiveData<List<ChatModel>> {
-        userNumber = mAuth!!.currentUser!!.phoneNumber.toString()
         val docRef = db.collection("users").document(userNumber)
             .collection("chat").document(otherUserNum)
         registration = docRef.addSnapshotListener { snapshot, e ->
@@ -130,7 +144,7 @@ class ChatListRepository {
         jsonObject.addProperty("chat_message", message.chatMessage)
         jsonObject.addProperty("chat_image", message.chatImage)
         jsonObject.addProperty("chat_video", message.chatVideo)
-        jsonObject.addProperty("timestamp", message.timestamp.toString())
+        jsonObject.addProperty("timestamp", message.timestamp)
         jsonObject.addProperty("readBoolean", false)
         jsonObject.addProperty("sender", userNumber)
         val docData = hashMapOf(
@@ -172,6 +186,103 @@ class ChatListRepository {
                     .addOnFailureListener { e -> Log.w(TAG, "Error writing document", e) }
             }
         return mutableLiveDataList
+    }
+
+    fun messageSentNew(
+        otherUserNum: String,
+        otherUserName: String,
+        message: ChatModel
+    ): MutableLiveData<List<ChatModel>> {
+        val jsonObject = JsonObject()
+        jsonObject.addProperty("chat_message", message.chatMessage)
+        jsonObject.addProperty("chat_image", message.chatImage)
+        jsonObject.addProperty("chat_video", message.chatVideo)
+        jsonObject.addProperty("readBoolean", false)
+        jsonObject.addProperty("sender", userNumber)
+        val docData = hashMapOf(
+            "chat" to jsonObject.toString(),
+            "name" to otherUserName,
+            "timeStamp" to FieldValue.serverTimestamp()
+        )
+        db.collection("users").document(userNumber)
+            .collection("conversations").document(otherUserNum)
+            .update("online", false)
+            .addOnSuccessListener {
+                Log.d(TAG, "DocumentSnapshot successfully written!")
+            }
+            .addOnFailureListener {
+//                Log.w(TAG, "Error writing document", it.cause)
+                db.collection("users").document(userNumber)
+                    .collection("conversations").document(otherUserNum)
+                    .set("online" to false)
+                    .addOnSuccessListener {
+                        Log.d(TAG, "DocumentSnapshot successfully written!")
+                    }
+                    .addOnFailureListener { e -> Log.w(TAG, "Error writing document", e) }
+            }
+
+
+        db.collection("users").document(userNumber)
+            .collection("conversations").document(otherUserNum).collection("chat")
+            .add(docData)
+            .addOnSuccessListener {
+                Log.d(TAG, "DocumentSnapshot successfully written!")
+            }
+            .addOnFailureListener { e -> Log.w(TAG, "Error writing document", e) }
+
+        db.collection("users").document(otherUserNum)
+            .collection("conversations").document(userNumber).collection("chat").add(docData)
+            .addOnSuccessListener {
+                Log.d(TAG, "DocumentSnapshot successfully written!")
+                mutableLiveDataList.value = chatList
+            }
+            .addOnFailureListener { e -> Log.w(TAG, "Error writing document", e) }
+        return mutableLiveDataList
+    }
+
+    private fun setDataInListNew(
+        documentList: MutableList<DocumentSnapshot>, oldMsg: Boolean
+    ): MutableList<ChatModel> {
+        Log.e(TAG, documentList.size.toString())
+        for (i in 0 until documentList.size) {
+            val json = JSONObject(documentList[i].toString())
+            val userMsg = json.get("chat_message").toString()
+            val sender = json.get("sender").toString()
+            val time = json.get("timestamp").toString()
+            val userImg = json.get("chat_image").toString().replace("\\", "")
+            val userVideo = json.get("chat_video").toString()
+            val user = if (sender == userNumber) {
+                "one"
+            } else {
+                "two"
+            }
+            when {
+                userMsg.isNotEmpty() -> {
+                    if (oldMsg) {
+                        chatList.add(0, ChatModel(userMsg, "", "", "", "", time, user))
+                    } else {
+                        chatList.add(ChatModel(userMsg, "", "", "", "", time, user))
+                    }
+                }
+                userImg.isNotEmpty() -> {
+                    if (oldMsg) {
+                        chatList.add(0, ChatModel("", userImg, "", "", "", time, user))
+                    } else {
+                        chatList.add(ChatModel("", userImg, "", "", "", time, user))
+                    }
+                }
+                userVideo.isNotEmpty() -> {
+                    if (oldMsg) {
+                        chatList.add(0, ChatModel("", "", "", "", userVideo, time, user))
+                    } else {
+                        chatList.add(ChatModel("", "", "", "", userVideo, time, user))
+                    }
+                }
+            }
+            Log.e(TAG, chatList.size.toString())
+
+        }
+        return chatList
     }
 
     private fun setDataInList(
@@ -229,7 +340,6 @@ class ChatListRepository {
         context: Context,
         date: String
     ): MutableLiveData<List<ChatModel>> {
-        userNumber = mAuth!!.currentUser!!.phoneNumber.toString()
         val randomString =
             "alaksaksjxn" + Math.random() + Math.random().toInt() + Math.random().toInt()
         if (resultUri != null) {

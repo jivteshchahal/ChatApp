@@ -46,6 +46,7 @@ class ContactListRepository {
                 val listType = object : TypeToken<MutableList<ContactsModel>>() {}.type
                 if (response.isNotEmpty()) {
                     val contactList: MutableList<ContactsModel> = ArrayList()
+//                    val mDb = AppDatabase.getInstance(activity.applicationContext)
                     val jsonList = gson.fromJson<MutableList<ContactsModel>>(response, listType)
                     for (i in 0 until jsonList.size) {
                         db!!.collection("users").document(jsonList[i].phoneNumber)
@@ -58,6 +59,15 @@ class ContactListRepository {
                                         document1.data!!["image_url"].toString()
                                     )
                                 )
+//                                AppExecutors.instance!!.diskIO().execute(Runnable {
+//                                    mDb!!.contactDou()!!.insertContact(
+//                                        ContactsModel(
+//                                            jsonList[i].phoneNumber,
+//                                            jsonList[i].name,
+//                                            document1.data!!["image_url"].toString()
+//                                        )
+//                                    )
+//                                })
                                 mutableLiveDataList.value = contactList
                             }
                             .addOnFailureListener { exception ->

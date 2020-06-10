@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/sflContacts"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/sflContacts"
     android:orientation="vertical"
     tools:context=".view.ui.fragments.ContactsFragment">
 
@@ -12,15 +12,31 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <SearchView
-            android:id="@+id/svContacts"
+        <LinearLayout
+            android:id="@+id/layoutSearch"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:autofillHints="Search Conversations"
-            android:iconifiedByDefault="false"
-            android:queryHint="Search Here"
-            android:visibility="gone" />
-        <!-- TODO: Update blank fragment layout -->
+            android:orientation="horizontal"
+            android:visibility="gone"
+            android:weightSum="1">
+
+            <SearchView
+                android:id="@+id/svContacts"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.9"
+                android:autofillHints="Search Conversations"
+                android:iconifiedByDefault="false"
+                android:queryHint="Search Here" />
+
+            <ImageButton
+                android:id="@+id/btnRefreshContacts"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.1"
+                android:src="@android:drawable/stat_notify_sync" />
+        </LinearLayout>
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rcViewContacts"
             android:layout_width="match_parent"

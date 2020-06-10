@@ -31,7 +31,7 @@ class ContactsPermission(private val thisActivity: Activity) {
                 // sees the explanation, try again to request the permission.
                 Toast.makeText(
                     thisActivity,
-                    "You cannot proceed without contacts permissionsss",
+                    "You cannot proceed without contacts permissions",
                     Toast.LENGTH_LONG
                 ).show()
                 flag = false

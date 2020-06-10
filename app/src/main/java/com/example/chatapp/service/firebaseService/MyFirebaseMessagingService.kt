@@ -109,7 +109,9 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     private fun sendRegistrationToServer(token: String?) {
         // TODO: Implement this method to send token to your app server.
         Log.d(TAG, "sendRegistrationTokenToServer($token)")
-        updateToken(token)
+        if (FirebaseAuth.getInstance().currentUser != null) {
+            updateToken(token)
+        }
     }
 
     /**
@@ -170,7 +172,6 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
             )
             notificationManager.createNotificationChannel(channel)
         }
-
         notificationManager.notify(0 /* ID of notification */, notificationBuilder.build())
     }
 

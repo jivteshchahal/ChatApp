@@ -36,6 +36,7 @@ class ChatFragmentViewModel : ViewModel() {
         chatModel: ChatModel
     ): LiveData<List<ChatModel>> {
         chatList = chatListRepository.messageSent(number, name, chatModel)
+        chatListRepository.messageSentNew(number, name, chatModel)
         return chatList
     }
 

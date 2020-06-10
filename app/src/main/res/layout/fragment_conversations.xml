@@ -7,6 +7,7 @@
     tools:context=".view.ui.fragments.ChatsFragment">
 
     <SearchView
+        android:id="@+id/svSearch"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:autofillHints="Search Conversations"
